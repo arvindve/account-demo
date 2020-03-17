@@ -1,0 +1,265 @@
+openapi: 3.0.2
+info:
+  version: '1.0'
+  title: 'Finance Account Demo'
+  description: 'Finance Account Demo '
+  contact:
+    name: Arvind Verma
+    email: arvind.verma.hk@gmail.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+version: 1.0.1
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/arvindve/finance-account-demo/1.0
+  - description: Development Finance Account Server
+    url: https://dev.example.com
+
+paths:
+  /v1/customers:
+    get:
+      parameters:
+        - name: pageNumber
+          in: query
+          description: page Number
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          description: page Size
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 25
+      summary: Get Customers
+      description: get a List of Customers in system
+      tags:
+        - Customer
+      operationId: listCustomers
+      responses:
+        '200':
+          description: List of Customers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPagedList'
+
+        '404':
+          description: No Customer found
+      security: []
+    post:
+      summary: New Customer
+      description: Create a New Customer
+      tags:
+        - Customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Customer"
+      responses:
+        '201':
+          description: Customer Created
+          headers:
+            Location:
+              description: Location of created customer
+              schema:
+                type: string
+                format: uri
+                example: http://example.com/v1/customers/{assignedIdValue}
+        '400':
+          description: Bad Request
+        '409':
+          description: Conflict
+  /v1/customers/{customerId}:
+    get:
+      summary: Get a Customer By Id
+      description: get a sinlge customer by it's id value
+      tags:
+        - Customer
+      operationId: getCustomerById
+      parameters:
+        - $ref: "#/components/parameters/CustomerIdPathParam"
+      responses:
+        '200':
+          description: Customer Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+        '404':
+          description: Not Found
+      security: []
+
+    put:
+      summary: Update Customer
+      description: Update customer by Id
+      tags:
+        - Customer
+      operationId: updateCustomerById
+      parameters:
+        - $ref: "#/components/parameters/CustomerIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Customer"
+      responses:
+        '204':
+          description: Customer Updated
+        '404':
+          description: Not Found
+        '409':
+          description: Conflict
+    delete:
+      summary: Delete Customer
+      description: delete customer by it's id value
+      tags:
+        - Customer
+      operationId: deleteCustomerById
+      parameters:
+        - $ref: "#/components/parameters/CustomerIdPathParam"
+      responses:
+        '200':
+          description: Customer Deleted
+        '404':
+          description: Not Found
+
+security:
+  - BasicAuth: []
+  - JWTAuthToken: []
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    JWTAuthToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CustomerIdPathParam:
+      name: customerId
+      in: path
+      required: true
+      description: Customer Id
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Address:
+      type: object
+      properties:
+        line1:
+          example: 231 line 1
+          type: string
+        city:
+          type: string
+          example: Hong Kong
+        stateCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          enum:
+            - AL
+            - BL
+            - SD
+            - TD
+            - DF
+        zipCode:
+          type: string
+          example: 000322
+    Customer:
+      type: object
+      description: customer object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        firstName:
+          type: string
+          example: Arvind
+          minLength: 2
+          maxLength: 100
+        lastName:
+          type: string
+          example: Verma
+          minLength: 2
+          maxLength: 100
+        address:
+          $ref: "#/components/schemas/Address"
+    CustomerList:
+      type: array
+      minItems: 2
+      maxLength: 100
+      items:
+        $ref: "#/components/schemas/Customer"
+    CustomerPagedList:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/PagedResponse"
+      properties:
+        content:
+          $ref: "#/components/schemas/CustomerList"
+    PagedResponse:
+      type: object
+      properties:
+        pageable:
+          $ref: '#/components/schemas/PagedResponse_pageable'
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+        totalElements:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        number:
+          type: integer
+          format: int32
+        numberOfElements:
+          type: integer
+          format: int32
+        sort:
+          $ref: '#/components/schemas/PagedResponse_pageable_sort'
+        first:
+          type: boolean
+    PagedResponse_pageable_sort:
+      type: object
+      properties:
+        sorted:
+          type: boolean
+        unsorted:
+          type: boolean
+    PagedResponse_pageable:
+      type: object
+      properties:
+        sort:
+          $ref: '#/components/schemas/PagedResponse_pageable_sort'
+        offset:
+          type: integer
+          format: int32
+        pageNumber:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        paged:
+          type: boolean
+        unpaged:
+          type: boolean
